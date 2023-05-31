@@ -168,7 +168,24 @@ FROM
   #VaccinatedPopulation;
 
   -- creating view to store data for later visualizations--
+  create view VaccinatedPopulation as
+  SELECT
+  dea.continent,
+  dea.location,
+  dea.date,
+  TRY_CONVERT(numeric(18, 0), CASE WHEN ISNUMERIC(population) = 1 THEN population ELSE NULL END) AS population,
+  vac.new_vaccinations,
+  SUM(CAST(vac.new_vaccinations AS bigint)) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) AS rolling_vaccinations
+FROM
+  [portfolio_project_covid].[dbo].[Covid_deaths] dea
+JOIN
+  [portfolio_project_covid].[dbo].[Covid_vaccinations] vac ON dea.location = vac.location AND dea.date = vac.date
+WHERE
+  vac.continent IS NOT NULL
+  AND ISNUMERIC(population) = 1;
 
+  select *
+  from #VaccinatedPopulation
 
 
 
